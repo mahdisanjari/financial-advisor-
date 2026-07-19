@@ -1,22 +1,34 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getDemoClients } from "../data/demoClients";
-import { calcNextFollowUp } from "../lib/followUp";
-import { getNextStageId } from "../lib/pipeline";
+import { calcNextFollowUp, todayISO, addDays } from "../lib/followUp";
+import { getNextStageId, PIPELINE_STAGES } from "../lib/pipeline";
 
 const STORAGE_KEY = "advisorpilot.clients";
-const DONE_KEY = "advisorpilot.myDayDone";
+const DONE_KEY = "advisorpilot.dailyTasks";
 const AV_COLORS = ["av-blue", "av-green", "av-amber", "av-red", "av-purple", "av-teal"];
 
 const ClientsContext = createContext(null);
 
+function normalize(clients) {
+  return clients.map((c) => ({
+    ...c,
+    nextFollowUp: c.followUpDate ? calcNextFollowUp(c.followUpDate) : c.nextFollowUp ?? "TBD",
+    telegram: c.telegram ?? "",
+    preferredContact: c.preferredContact ?? "phone",
+    meeting: c.meeting ?? null,
+    files: c.files ?? [],
+    notes: c.notes ?? [],
+  }));
+}
+
 function loadClients() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return normalize(JSON.parse(raw));
   } catch (e) {
     console.warn("Failed to load clients from localStorage", e);
   }
-  return getDemoClients();
+  return normalize(getDemoClients());
 }
 
 function loadDone() {
@@ -26,50 +38,83 @@ function loadDone() {
   } catch (e) {
     console.warn("Failed to load done state from localStorage", e);
   }
-  return [];
+  return {};
 }
 
 export function ClientsProvider({ children }) {
   const [clients, setClients] = useState(loadClients);
-  const [doneIds, setDoneIds] = useState(loadDone);
+  const [doneTasks, setDoneTasks] = useState(loadDone);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
   }, [clients]);
 
   useEffect(() => {
-    localStorage.setItem(DONE_KEY, JSON.stringify(doneIds));
-  }, [doneIds]);
+    localStorage.setItem(DONE_KEY, JSON.stringify(doneTasks));
+  }, [doneTasks]);
+
+  const nextColor = () => AV_COLORS[clients.length % AV_COLORS.length];
 
   const addClient = (form) => {
     const id = Date.now();
-    const color = AV_COLORS[clients.length % AV_COLORS.length];
     const nextFollowUp = form.nextFollowUpDate ? calcNextFollowUp(form.nextFollowUpDate) : "TBD";
 
     const newClient = {
       id,
       first: form.first.trim(),
       last: form.last.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim(),
-      priority: form.priority,
-      color,
-      joined: new Date().toISOString().slice(0, 10),
+      phone: form.phone?.trim() ?? "",
+      email: form.email?.trim() ?? "",
+      telegram: form.telegram?.trim() ?? "",
+      preferredContact: form.preferredContact || "phone",
+      priority: form.priority || "Medium",
+      color: nextColor(),
+      joined: todayISO(),
       followUpDate: form.nextFollowUpDate || "",
       nextFollowUp,
       lastContact: "Not yet contacted",
+      lastContactDate: "",
       interests: [],
-      currentStage: "cp",
-      stages: {
-        cp: { status: "pending", data: {}, files: [] },
-      },
-      notes: form.notes?.trim()
-        ? [{ text: form.notes.trim(), date: new Date().toISOString().slice(0, 10) }]
-        : [],
+      currentStage: form.currentStage || "lead",
+      stages: { [form.currentStage || "lead"]: { status: "pending", data: {}, files: [] } },
+      meeting: null,
+      files: [],
+      notes: form.notes?.trim() ? [{ id: Date.now(), text: form.notes.trim(), date: todayISO() }] : [],
     };
 
     setClients((prev) => [newClient, ...prev]);
     return newClient;
+  };
+
+  const updateClient = (clientId, patch) => {
+    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, ...patch } : c)));
+  };
+
+  const addNote = (clientId, text) => {
+    if (!text?.trim()) return;
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId
+          ? { ...c, notes: [{ id: Date.now(), text: text.trim(), date: todayISO() }, ...c.notes] }
+          : c
+      )
+    );
+  };
+
+  const editNote = (clientId, noteId, text) => {
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId
+          ? { ...c, notes: c.notes.map((n) => (n.id === noteId ? { ...n, text } : n)) }
+          : c
+      )
+    );
+  };
+
+  const deleteNote = (clientId, noteId) => {
+    setClients((prev) =>
+      prev.map((c) => (c.id === clientId ? { ...c, notes: c.notes.filter((n) => n.id !== noteId) } : c))
+    );
   };
 
   /**
@@ -99,7 +144,7 @@ export function ClientsProvider({ children }) {
         }
 
         const notes = note?.trim()
-          ? [{ text: note.trim(), date: new Date().toISOString().slice(0, 10), stage: stageId }, ...c.notes]
+          ? [{ id: Date.now(), text: note.trim(), date: todayISO(), stage: stageId }, ...c.notes]
           : c.notes;
 
         const lastContact = date
@@ -111,17 +156,148 @@ export function ClientsProvider({ children }) {
     );
   };
 
-  const toggleDone = (clientId) => {
-    setDoneIds((prev) =>
-      prev.includes(clientId) ? prev.filter((id) => id !== clientId) : [...prev, clientId]
+  const markContacted = (clientId) => {
+    const today = todayISO();
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId
+          ? {
+              ...c,
+              lastContactDate: today,
+              lastContact: `Logged contact, today`,
+              followUpDate: addDays(today, 7),
+              nextFollowUp: calcNextFollowUp(addDays(today, 7)),
+            }
+          : c
+      )
     );
+  };
+
+  const snooze = (clientId, days = 3) => {
+    setClients((prev) =>
+      prev.map((c) => {
+        if (c.id !== clientId) return c;
+        const newDate = addDays(c.followUpDate || todayISO(), days);
+        return { ...c, followUpDate: newDate, nextFollowUp: calcNextFollowUp(newDate) };
+      })
+    );
+  };
+
+  const rescheduleFollowUp = (clientId, newDate) => {
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId ? { ...c, followUpDate: newDate, nextFollowUp: calcNextFollowUp(newDate) } : c
+      )
+    );
+  };
+
+  const rescheduleMeeting = (clientId, newDate, time) => {
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId ? { ...c, meeting: { ...(c.meeting || {}), date: newDate, time: time || c.meeting?.time } } : c
+      )
+    );
+  };
+
+  const toggleFileStatus = (clientId, fileId) => {
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId
+          ? {
+              ...c,
+              files: c.files.map((f) =>
+                f.id === fileId ? { ...f, status: f.status === "pending" ? "done" : "pending" } : f
+              ),
+            }
+          : c
+      )
+    );
+  };
+
+  const isTaskDoneToday = (clientId, taskType) => doneTasks[`${clientId}:${taskType}`] === todayISO();
+
+  const toggleDailyTask = (clientId, taskType) => {
+    const key = `${clientId}:${taskType}`;
+    setDoneTasks((prev) => {
+      const next = { ...prev };
+      if (next[key] === todayISO()) delete next[key];
+      else next[key] = todayISO();
+      return next;
+    });
+  };
+
+  const importClients = (rows) => {
+    const results = { successCount: 0, failedRows: [] };
+    const created = [];
+
+    rows.forEach((row, idx) => {
+      const name = (row.name || row.Name || "").trim();
+      if (!name) {
+        results.failedRows.push({ row: idx + 1, error: "Missing Name" });
+        return;
+      }
+      const parts = name.split(/\s+/);
+      const first = parts[0];
+      const last = parts.slice(1).join(" ") || "—";
+
+      const followUpDate = row.nextFollowUp || row["Next Follow-up"] || "";
+      const parsedDate = followUpDate && !Number.isNaN(new Date(followUpDate).getTime()) ? followUpDate : "";
+
+      const rawStage = (row.stage || row.Stage || "").trim().toLowerCase();
+      const matchedStage =
+        PIPELINE_STAGES.find((s) => s.label.toLowerCase() === rawStage || s.id === rawStage)?.id || "lead";
+
+      created.push({
+        id: Date.now() + idx,
+        first,
+        last,
+        phone: row.phone || row.Phone || "",
+        email: row.email || row.Email || "",
+        telegram: row.telegram || row.Telegram || "",
+        preferredContact: "phone",
+        priority: "Medium",
+        color: AV_COLORS[(clients.length + idx) % AV_COLORS.length],
+        joined: todayISO(),
+        followUpDate: parsedDate,
+        nextFollowUp: parsedDate ? calcNextFollowUp(parsedDate) : "TBD",
+        lastContact: row.lastContact || row["Last Contact"] || "Not yet contacted",
+        lastContactDate: "",
+        interests: [],
+        currentStage: matchedStage,
+        stages: { [matchedStage]: { status: "pending", data: {}, files: [] } },
+        meeting: null,
+        files: [],
+        notes: [],
+      });
+      results.successCount += 1;
+    });
+
+    if (created.length) setClients((prev) => [...created, ...prev]);
+    return results;
   };
 
   const getClient = (id) => clients.find((c) => String(c.id) === String(id));
 
   const value = useMemo(
-    () => ({ clients, addClient, updateStage, doneIds, toggleDone, getClient }),
-    [clients, doneIds]
+    () => ({
+      clients,
+      addClient,
+      updateClient,
+      addNote,
+      editNote,
+      deleteNote,
+      updateStage,
+      markContacted,
+      snooze,
+      rescheduleFollowUp,
+      rescheduleMeeting,
+      toggleFileStatus,
+      isTaskDoneToday,
+      toggleDailyTask,
+      importClients,
+      getClient,
+    }),
+    [clients, doneTasks]
   );
 
   return <ClientsContext.Provider value={value}>{children}</ClientsContext.Provider>;

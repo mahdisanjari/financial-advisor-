@@ -1,26 +1,23 @@
 import {
-  ClipboardList,
-  CalendarClock,
-  Briefcase,
+  UserPlus,
+  Send,
   MessageCircle,
-  MessagesSquare,
-  FileSearch,
-  Target,
-  RefreshCcw,
-  CheckCircle2,
+  ClipboardCheck,
+  Clock,
+  ShieldCheck,
+  TrendingUp,
+  Star,
 } from "lucide-react";
 
 export const PIPELINE_STAGES = [
-  { id: "cp", short: "CP", label: "Client Planning", icon: ClipboardList },
-  { id: "setmeet", short: "Set Meeting", label: "Set Meeting", icon: CalendarClock },
-  { id: "bp", short: "BP", label: "Business Plan", icon: Briefcase },
-  { id: "fc1", short: "FC1", label: "First Conversation", icon: MessageCircle },
-  { id: "fc2", short: "FC2", label: "Second Conversation", icon: MessageCircle },
-  { id: "fc3", short: "FC3", label: "Third Conversation", icon: MessagesSquare },
-  { id: "fna", short: "FNA", label: "Financial Needs Analysis", icon: FileSearch },
-  { id: "strategy", short: "Strategy", label: "Strategy", icon: Target },
-  { id: "strategyfu", short: "Strategy FU", label: "Strategy Follow-up", icon: RefreshCcw },
-  { id: "closing", short: "Closing", label: "Closing", icon: CheckCircle2 },
+  { id: "lead", short: "Lead", label: "Lead", icon: UserPlus },
+  { id: "invited_fc1", short: "Invited", label: "Invited to FC1", icon: Send },
+  { id: "fc1_completed", short: "FC1 Done", label: "FC1 Completed", icon: MessageCircle },
+  { id: "fna_completed", short: "FNA Done", label: "FNA Completed", icon: ClipboardCheck },
+  { id: "insurance_pending", short: "Ins. Pending", label: "Insurance Pending", icon: Clock },
+  { id: "insurance_approved", short: "Ins. Approved", label: "Insurance Approved", icon: ShieldCheck },
+  { id: "investment_discussion", short: "Investment", label: "Investment Discussion", icon: TrendingUp },
+  { id: "client", short: "Client", label: "Client", icon: Star },
 ];
 
 export const STAGE_INDEX = Object.fromEntries(
@@ -52,4 +49,8 @@ export function getNextStageId(stageId) {
 export function pipelineProgress(currentStageId) {
   const idx = STAGE_INDEX[currentStageId] ?? 0;
   return Math.round(((idx + 1) / PIPELINE_STAGES.length) * 100);
+}
+
+export function isLead(stageId) {
+  return stageId !== "client";
 }

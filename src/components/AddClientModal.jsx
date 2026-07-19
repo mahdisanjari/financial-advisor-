@@ -8,6 +8,8 @@ const EMPTY_FORM = {
   last: "",
   phone: "",
   email: "",
+  telegram: "",
+  preferredContact: "phone",
   priority: "Medium",
   nextFollowUpDate: "",
   notes: "",
@@ -95,15 +97,25 @@ export default function AddClientModal({ open, onClose }) {
             />
           </Field>
 
-          <Field label="Email">
-            <input
-              type="email"
-              value={form.email}
-              onChange={update("email")}
-              className={inputClass()}
-              placeholder="jane.doe@email.com"
-            />
-          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Email">
+              <input
+                type="email"
+                value={form.email}
+                onChange={update("email")}
+                className={inputClass()}
+                placeholder="jane.doe@email.com"
+              />
+            </Field>
+            <Field label="Telegram Username">
+              <input
+                value={form.telegram}
+                onChange={update("telegram")}
+                className={inputClass()}
+                placeholder="@janedoe"
+              />
+            </Field>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Priority">
@@ -113,15 +125,23 @@ export default function AddClientModal({ open, onClose }) {
                 <option value="Low">Low</option>
               </select>
             </Field>
-            <Field label="Next Follow-up Date">
-              <input
-                type="date"
-                value={form.nextFollowUpDate}
-                onChange={update("nextFollowUpDate")}
-                className={inputClass()}
-              />
+            <Field label="Preferred Contact">
+              <select value={form.preferredContact} onChange={update("preferredContact")} className={inputClass()}>
+                <option value="phone">Phone</option>
+                <option value="email">Email</option>
+                <option value="telegram">Telegram</option>
+              </select>
             </Field>
           </div>
+
+          <Field label="Next Follow-up Date">
+            <input
+              type="date"
+              value={form.nextFollowUpDate}
+              onChange={update("nextFollowUpDate")}
+              className={inputClass()}
+            />
+          </Field>
 
           <Field label="Initial Notes">
             <textarea

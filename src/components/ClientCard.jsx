@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Phone, MessageSquareText, PhoneCall } from "lucide-react";
+import { ChevronDown, MessageSquareText, PhoneCall, Clock3, CalendarClock } from "lucide-react";
 import { pipelineProgress, getStage } from "../lib/pipeline";
+import { daysAgoLabel } from "../lib/followUp";
 import { useToast } from "../context/ToastContext";
 
 const PRIORITY_DOT = {
@@ -24,7 +25,7 @@ const FOLLOWUP_BADGE = {
   TBD: "bg-slate-100 text-slate-500",
 };
 
-export default function ClientCard({ client, done, onToggleDone }) {
+export default function ClientCard({ client, done, onToggleDone, onSnooze, onReschedule, subtitle }) {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -38,7 +39,7 @@ export default function ClientCard({ client, done, onToggleDone }) {
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       <div className="flex items-center gap-3 px-4 py-3">
         <button
-          onClick={() => onToggleDone(client.id)}
+          onClick={() => onToggleDone?.(client.id)}
           aria-label={done ? "Mark as not done" : "Mark as done"}
           className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
             done ? "border-gold bg-gold" : "border-slate-300 hover:border-gold"
@@ -53,12 +54,15 @@ export default function ClientCard({ client, done, onToggleDone }) {
           onClick={() => setExpanded((e) => !e)}
           className="flex flex-1 items-center justify-between gap-2 text-left"
         >
-          <span
-            className={`truncate text-sm font-semibold ${
-              done ? "text-slate-400 line-through" : "text-navy"
-            }`}
-          >
-            {fullName}
+          <span className="min-w-0">
+            <span
+              className={`block truncate text-sm font-semibold ${
+                done ? "text-slate-400 line-through" : "text-navy"
+              }`}
+            >
+              {fullName}
+            </span>
+            {subtitle && <span className="block truncate text-xs text-slate-400">{subtitle}</span>}
           </span>
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_BADGE[client.priority]}`}>
@@ -110,7 +114,7 @@ export default function ClientCard({ client, done, onToggleDone }) {
               </div>
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Last Contact</p>
-                <p className="text-navy">{client.lastContact || "—"}</p>
+                <p className="text-navy">{daysAgoLabel(client.lastContactDate)}</p>
               </div>
             </div>
 
@@ -138,13 +142,13 @@ export default function ClientCard({ client, done, onToggleDone }) {
 
             <div className="flex flex-wrap gap-2 pt-1">
               <button
-                onClick={() => navigate(`/client/${client.id}`)}
+                onClick={() => navigate(`/clients/${client.id}`)}
                 className="rounded-lg bg-navy px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-navy-light"
               >
                 Open Profile
               </button>
               <button
-                onClick={() => navigate(`/client/${client.id}?ai=1`)}
+                onClick={() => navigate(`/clients/${client.id}?ai=1`)}
                 className="flex items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-gold-dark transition hover:bg-gold/20"
               >
                 <MessageSquareText size={13} />
@@ -157,6 +161,24 @@ export default function ClientCard({ client, done, onToggleDone }) {
                 <PhoneCall size={13} />
                 Log Call
               </button>
+              {onSnooze && (
+                <button
+                  onClick={() => onSnooze(client.id)}
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  <Clock3 size={13} />
+                  Snooze 3 days
+                </button>
+              )}
+              {onReschedule && (
+                <button
+                  onClick={() => onReschedule(client)}
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  <CalendarClock size={13} />
+                  Reschedule
+                </button>
+              )}
             </div>
           </div>
         </div>

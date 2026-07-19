@@ -42,3 +42,24 @@ export function todayLong() {
     year: "numeric",
   });
 }
+
+export function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function addDays(dateStr, days) {
+  const base = dateStr ? new Date(dateStr) : new Date();
+  base.setDate(base.getDate() + days);
+  return base.toISOString().slice(0, 10);
+}
+
+export function daysAgoLabel(dateStr) {
+  if (!dateStr) return "Never contacted";
+  const target = startOfDay(dateStr);
+  if (Number.isNaN(target.getTime())) return "Never contacted";
+  const today = startOfDay(new Date());
+  const diffDays = Math.round((today - target) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  return `${diffDays} days ago`;
+}
