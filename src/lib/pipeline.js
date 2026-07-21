@@ -2,11 +2,11 @@ import {
   ClipboardList,
   MessageCircle,
   MessagesSquare,
-  Users,
   Target,
   RefreshCcw,
   CheckCircle2,
   ShieldCheck,
+  Star,
 } from "lucide-react";
 
 export const PIPELINE_STAGES = [
@@ -17,7 +17,8 @@ export const PIPELINE_STAGES = [
   { id: "strategy_meeting", short: "Strategy", label: "Strategy Meeting", icon: Target },
   { id: "strategy_followup", short: "Strategy FU", label: "Strategy Follow-up", icon: RefreshCcw },
   { id: "closing", short: "Closing", label: "Closing", icon: CheckCircle2 },
-  { id: "policy_delivery_client", short: "Policy Delivery", label: "Policy Delivery Client", icon: ShieldCheck },
+  { id: "policy_delivery", short: "Policy Delivery", label: "Policy Delivery", icon: ShieldCheck },
+  { id: "client", short: "Client", label: "Client", icon: Star },
 ];
 
 export const STAGE_INDEX = Object.fromEntries(
