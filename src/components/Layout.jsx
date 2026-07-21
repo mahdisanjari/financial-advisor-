@@ -47,22 +47,24 @@ export default function Layout() {
           </div>
         </div>
 
-        <nav className="scrollbar-none flex items-center gap-1 overflow-x-auto border-t border-white/5 px-4 py-1.5 sm:px-6">
-          {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  isActive ? "bg-white/10 text-gold" : "text-slate-300 hover:text-white"
-                }`
-              }
-            >
-              <Icon size={14} />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="border-t border-white/5">
+          <nav className="scrollbar-none mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4 py-1.5 sm:px-6">
+            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    isActive ? "bg-white/10 text-gold" : "text-slate-300 hover:text-white"
+                  }`
+                }
+              >
+                <Icon size={14} />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6">
