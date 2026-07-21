@@ -24,6 +24,8 @@ export default {
           red: "#EF4444",
           purple: "#8B5CF6",
           teal: "#14B8A6",
+          yellow: "#EAB308",
+          brown: "#8B5E34",
         },
       },
       keyframes: {

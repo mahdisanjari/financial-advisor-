@@ -2,10 +2,11 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { useClients } from "../context/ClientsContext";
 import { useToast } from "../context/ToastContext";
+import { getStageStatusMeta } from "../lib/stageStatus";
 
 const STATUS_OPTIONS = [
-  { value: "upcoming", label: "Not scheduled" },
-  { value: "pending", label: "Scheduled / Pending" },
+  { value: "upcoming", label: "Not Scheduled" },
+  { value: "pending", label: "Pending" },
   { value: "completed", label: "Completed" },
   { value: "skipped", label: "Skipped" },
 ];
@@ -62,17 +63,20 @@ export default function MeetingModal({ client, stage, onClose }) {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Outcome</span>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${getStageStatusMeta(status).dot}`} />
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             {(status === "completed" || status === "skipped") && stage.id === client.currentStage && (
               <span className="text-xs text-gold-dark">Pipeline will advance to the next stage on save.</span>
             )}
