@@ -3,22 +3,25 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 const SESSION_KEY = "advisorpilot.session";
 const USERS_KEY = "advisorpilot.users";
 
+const SEED_USER = {
+  name: "Soroush Ojagh",
+  email: "sojagh34vlcc@wfgmail.ca",
+  password: "Mm315201",
+};
+
 const AuthContext = createContext(null);
 
 function loadUsers() {
+  let stored = {};
   try {
     const raw = localStorage.getItem(USERS_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) stored = JSON.parse(raw);
   } catch (e) {
     console.warn("Failed to load users from localStorage", e);
   }
-  return {
-    "sojagh34vlcc@wfgmail.ca": {
-      name: "Soroush Ojagh",
-      email: "sojagh34vlcc@wfgmail.ca",
-      password: "Mm315201",
-    },
-  };
+  // Always keep the seed account's credentials current, even if an older
+  // seed (different email/password) was previously cached in this browser.
+  return { ...stored, [SEED_USER.email]: SEED_USER };
 }
 
 function loadSession() {
