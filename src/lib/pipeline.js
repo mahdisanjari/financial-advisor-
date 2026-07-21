@@ -1,23 +1,23 @@
 import {
-  UserPlus,
-  Send,
+  ClipboardList,
   MessageCircle,
-  ClipboardCheck,
-  Clock,
+  MessagesSquare,
+  Users,
+  Target,
+  RefreshCcw,
+  CheckCircle2,
   ShieldCheck,
-  TrendingUp,
-  Star,
 } from "lucide-react";
 
 export const PIPELINE_STAGES = [
-  { id: "lead", short: "Lead", label: "Lead", icon: UserPlus },
-  { id: "invited_fc1", short: "Invited", label: "Invited to FC1", icon: Send },
-  { id: "fc1_completed", short: "FC1 Done", label: "FC1 Completed", icon: MessageCircle },
-  { id: "fna_completed", short: "FNA Done", label: "FNA Completed", icon: ClipboardCheck },
-  { id: "insurance_pending", short: "Ins. Pending", label: "Insurance Pending", icon: Clock },
-  { id: "insurance_approved", short: "Ins. Approved", label: "Insurance Approved", icon: ShieldCheck },
-  { id: "investment_discussion", short: "Investment", label: "Investment Discussion", icon: TrendingUp },
-  { id: "client", short: "Client", label: "Client", icon: Star },
+  { id: "cp", short: "CP", label: "CP", icon: ClipboardList },
+  { id: "fc1", short: "FC1", label: "FC1", icon: MessageCircle },
+  { id: "fc2", short: "FC2", label: "FC2", icon: MessageCircle },
+  { id: "fc3", short: "FC3", label: "FC3", icon: MessagesSquare },
+  { id: "strategy_meeting", short: "Strategy", label: "Strategy Meeting", icon: Target },
+  { id: "strategy_followup", short: "Strategy FU", label: "Strategy Follow-up", icon: RefreshCcw },
+  { id: "closing", short: "Closing", label: "Closing", icon: CheckCircle2 },
+  { id: "policy_delivery_client", short: "Policy Delivery", label: "Policy Delivery Client", icon: ShieldCheck },
 ];
 
 export const STAGE_INDEX = Object.fromEntries(
@@ -51,6 +51,11 @@ export function pipelineProgress(currentStageId) {
   return Math.round(((idx + 1) / PIPELINE_STAGES.length) * 100);
 }
 
+const FIRST_STAGE_ID = PIPELINE_STAGES[0].id;
+const LAST_STAGE_ID = PIPELINE_STAGES[PIPELINE_STAGES.length - 1].id;
+
 export function isLead(stageId) {
-  return stageId !== "client";
+  return stageId !== LAST_STAGE_ID;
 }
+
+export { FIRST_STAGE_ID, LAST_STAGE_ID };

@@ -13,10 +13,10 @@ function loadUsers() {
     console.warn("Failed to load users from localStorage", e);
   }
   return {
-    "advisor@advisorpilot.com": {
-      name: "Alex Advisor",
-      email: "advisor@advisorpilot.com",
-      password: "password",
+    "sojagh34vlcc@wfgmail.ca": {
+      name: "Soroush Ojagh",
+      email: "sojagh34vlcc@wfgmail.ca",
+      password: "Mm315201",
     },
   };
 }

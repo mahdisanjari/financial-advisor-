@@ -7,8 +7,8 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("advisor@advisorpilot.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("sojagh34vlcc@wfgmail.ca");
+  const [password, setPassword] = useState("Mm315201");
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getDemoClients } from "../data/demoClients";
 import { calcNextFollowUp, todayISO, addDays } from "../lib/followUp";
-import { getNextStageId, PIPELINE_STAGES } from "../lib/pipeline";
+import { getNextStageId, PIPELINE_STAGES, FIRST_STAGE_ID } from "../lib/pipeline";
 
 const STORAGE_KEY = "advisorpilot.clients";
 const DONE_KEY = "advisorpilot.dailyTasks";
@@ -75,8 +75,8 @@ export function ClientsProvider({ children }) {
       lastContact: "Not yet contacted",
       lastContactDate: "",
       interests: [],
-      currentStage: form.currentStage || "lead",
-      stages: { [form.currentStage || "lead"]: { status: "pending", data: {}, files: [] } },
+      currentStage: form.currentStage || FIRST_STAGE_ID,
+      stages: { [form.currentStage || FIRST_STAGE_ID]: { status: "pending", data: {}, files: [] } },
       meeting: null,
       files: [],
       notes: form.notes?.trim() ? [{ id: Date.now(), text: form.notes.trim(), date: todayISO() }] : [],
@@ -245,7 +245,7 @@ export function ClientsProvider({ children }) {
 
       const rawStage = (row.stage || row.Stage || "").trim().toLowerCase();
       const matchedStage =
-        PIPELINE_STAGES.find((s) => s.label.toLowerCase() === rawStage || s.id === rawStage)?.id || "lead";
+        PIPELINE_STAGES.find((s) => s.label.toLowerCase() === rawStage || s.id === rawStage)?.id || FIRST_STAGE_ID;
 
       created.push({
         id: Date.now() + idx,

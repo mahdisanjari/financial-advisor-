@@ -21,8 +21,8 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-navy">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:px-6">
+          <div className="flex shrink-0 items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold text-navy">
               <Compass size={18} strokeWidth={2.5} />
             </div>
@@ -31,11 +31,28 @@ export default function Layout() {
             </span>
           </div>
 
-          <div className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 sm:px-4">
+          <nav className="hidden shrink-0 items-center gap-1 md:flex">
+            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    isActive ? "bg-white/10 text-gold" : "text-slate-300 hover:text-white"
+                  }`
+                }
+              >
+                <Icon size={14} />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="order-3 w-full sm:order-none sm:w-auto sm:flex-1 sm:px-2">
             <GlobalSearch />
           </div>
 
-          <div className="order-2 flex items-center gap-1 sm:order-3">
+          <div className="flex shrink-0 items-center gap-1">
             <NotificationsDropdown />
             <NavLink
               to="/profile"
@@ -47,7 +64,7 @@ export default function Layout() {
           </div>
         </div>
 
-        <nav className="scrollbar-none flex items-center gap-1 overflow-x-auto border-t border-white/5 px-4 py-1.5 sm:px-6">
+        <nav className="scrollbar-none flex items-center gap-1 overflow-x-auto border-t border-white/5 px-4 py-1.5 sm:px-6 md:hidden">
           {NAV_LINKS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
