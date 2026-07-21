@@ -22,14 +22,14 @@ export default function Layout() {
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-navy">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex shrink-0 items-center gap-2">
+          <NavLink to="/dashboard" className="flex shrink-0 items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold text-navy">
               <Compass size={18} strokeWidth={2.5} />
             </div>
             <span className="text-base font-bold tracking-tight text-white">
               Advisor<span className="text-gold">Pilot</span>
             </span>
-          </div>
+          </NavLink>
 
           <div className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 sm:px-4">
             <GlobalSearch />
