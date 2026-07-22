@@ -6,6 +6,7 @@ import { formatTime } from "../lib/notifications";
 import { useToast } from "../context/ToastContext";
 import ClientCard from "../components/ClientCard";
 import RescheduleModal from "../components/RescheduleModal";
+import GoogleMeetingsSection from "../components/GoogleMeetingsSection";
 
 export default function MyDay() {
   const { clients, isTaskDoneToday, toggleDailyTask, snooze, rescheduleFollowUp, rescheduleMeeting, toggleFileStatus } =
@@ -132,6 +133,8 @@ export default function MyDay() {
           />
         ))}
       </Section>
+
+      <GoogleMeetingsSection />
 
       <Section icon={FileText} title="Pending Files" count={pendingFiles.length}>
         {pendingFiles.map(({ client, file }) => (

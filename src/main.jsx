@@ -5,6 +5,7 @@ import App from "./App";
 import { ClientsProvider } from "./context/ClientsContext";
 import { ToastProvider } from "./context/ToastContext";
 import { AuthProvider } from "./context/AuthContext";
+import { GoogleCalendarProvider } from "./context/GoogleCalendarContext";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -12,9 +13,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <ToastProvider>
         <AuthProvider>
-          <ClientsProvider>
-            <App />
-          </ClientsProvider>
+          <GoogleCalendarProvider>
+            <ClientsProvider>
+              <App />
+            </ClientsProvider>
+          </GoogleCalendarProvider>
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

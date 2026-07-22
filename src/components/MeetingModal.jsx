@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, CalendarPlus } from "lucide-react";
 import { useClients } from "../context/ClientsContext";
 import { useToast } from "../context/ToastContext";
+import { useGoogleCalendar } from "../context/GoogleCalendarContext";
 import { getStageStatusMeta } from "../lib/stageStatus";
 
 const STATUS_OPTIONS = [
@@ -14,11 +15,14 @@ const STATUS_OPTIONS = [
 export default function MeetingModal({ client, stage, onClose }) {
   const { updateStage } = useClients();
   const { addToast } = useToast();
+  const { isConfigured, status: googleStatus, connect, createEvent } = useGoogleCalendar();
   const stageState = client.stages[stage.id];
 
   const [date, setDate] = useState(stageState?.date ?? "");
+  const [time, setTime] = useState("09:00");
   const [status, setStatus] = useState(stageState?.status ?? "upcoming");
   const [note, setNote] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,6 +30,52 @@ export default function MeetingModal({ client, stage, onClose }) {
     addToast(`${stage.label} updated for ${client.first} ${client.last}`);
     onClose();
   };
+
+  const handleGoogleButton = async () => {
+    if (googleStatus !== "connected") {
+      try {
+        await connect();
+        addToast("Google Calendar connected — click again to add this meeting.");
+      } catch (err) {
+        addToast(err.message || "Could not connect to Google Calendar");
+      }
+      return;
+    }
+
+    if (!date) return;
+    setSyncing(true);
+    try {
+      const start = new Date(`${date}T${time}`);
+      const end = new Date(start.getTime() + 30 * 60 * 1000);
+      await createEvent({
+        summary: `${stage.label} — ${client.first} ${client.last}`,
+        description: `AdvisorPilot meeting: ${stage.label} with ${client.first} ${client.last}.`,
+        startISO: start.toISOString(),
+        endISO: end.toISOString(),
+        clientId: client.id,
+      });
+      addToast("Added to Google Calendar");
+    } catch (err) {
+      if (err.needsReconnect) {
+        addToast("Google session expired — click Reconnect and try again.");
+      } else {
+        addToast(err.message || "Could not add to Google Calendar");
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const googleButtonLabel =
+    googleStatus === "connecting"
+      ? "Connecting..."
+      : googleStatus === "connected"
+        ? syncing
+          ? "Adding..."
+          : "Add to Google Calendar"
+        : googleStatus === "expired"
+          ? "Reconnect Google Calendar"
+          : "Connect Google Calendar";
 
   return (
     <div
@@ -51,15 +101,38 @@ export default function MeetingModal({ client, stage, onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 py-5">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Meeting Date</span>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
-            />
-          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Meeting Date</span>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Time</span>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
+              />
+            </label>
+          </div>
+
+          {isConfigured && (
+            <button
+              type="button"
+              onClick={handleGoogleButton}
+              disabled={(googleStatus === "connected" && !date) || syncing || googleStatus === "connecting"}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-dark transition hover:bg-gold/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <CalendarPlus size={14} />
+              {googleButtonLabel}
+            </button>
+          )}
 
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Outcome</span>

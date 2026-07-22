@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import GoogleCalendarPanel from "../components/GoogleCalendarPanel";
 
 export default function Profile() {
   const { user, updateProfile, logout } = useAuth();
@@ -64,6 +65,8 @@ export default function Profile() {
           </div>
         </form>
       </section>
+
+      <GoogleCalendarPanel />
 
       <button
         onClick={handleLogout}
